@@ -11,14 +11,15 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 
 //Key press surfaces constants
-enum KeyPressSurfaces
+enum SurfacesIndexes
 {
-    KEY_PRESS_SURFACE_DEFAULT,
-    KEY_PRESS_SURFACE_UP,
-    KEY_PRESS_SURFACE_DOWN,
-    KEY_PRESS_SURFACE_LEFT,
-    KEY_PRESS_SURFACE_RIGHT,
-    KEY_PRESS_SURFACE_TOTAL
+    SURFACE_DEFAULT,
+    SURFACE_INTRO,
+    SURFACE_KEY_PRESS_UP,
+    SURFACE_KEY_PRESS_DOWN,
+    SURFACE_KEY_PRESS_LEFT,
+    SURFACE_KEY_PRESS_RIGHT,
+    SURFACE_TOTAL
 };
 
 //The window we'll be rendering to
@@ -28,7 +29,7 @@ SDL_Window* gWindow = NULL;
 SDL_Surface* gScreenSurface = NULL;
 
 //The images that correspond to a keypress
-SDL_Surface* gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
+SDL_Surface* gKeyPressSurfaces[SURFACE_TOTAL];
 
 //Current displayed image
 SDL_Surface* gCurrentSurface = NULL;
@@ -54,14 +55,24 @@ bool init() {
 
 SDL_Surface* loadSurface(string path)
 {
-    //Load image at specified path
-    SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
-    if( loadedSurface == NULL )
-    {
-        printf( "Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
+    //The final optimized image
+	SDL_Surface* optimizedSurface = NULL;
+
+	//Load image at specified path
+	SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
+	if (loadedSurface == NULL) {
+		printf( "Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
+	} else {
+        //Convert surface to screen format
+		optimizedSurface = SDL_ConvertSurface(loadedSurface, gScreenSurface->format, 0);
+		if( optimizedSurface == NULL ) {
+			printf("Unable to optimize image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+		}
+
+		SDL_FreeSurface(loadedSurface);
     }
 
-    return loadedSurface;
+    return optimizedSurface;
 }
 
 bool loadMedia()
@@ -70,37 +81,44 @@ bool loadMedia()
     bool success = true;
 
     //Load default surface
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("images/turtley_screen.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == NULL)
+    gKeyPressSurfaces[SURFACE_DEFAULT] = loadSurface("images/turtley_screen.bmp");
+    if (gKeyPressSurfaces[SURFACE_DEFAULT] == NULL)
+    {
+        printf( "Failed to load default image!\n" );
+        success = false;
+    }
+
+    gKeyPressSurfaces[SURFACE_INTRO] = loadSurface("images/turtley_intro.bmp");
+    if (gKeyPressSurfaces[SURFACE_INTRO] == NULL)
     {
         printf( "Failed to load default image!\n" );
         success = false;
     }
 
     //Load up surface
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadSurface("images/turtley_screen_up.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] == NULL) {
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_UP] = loadSurface("images/turtley_screen_up.bmp");
+    if (gKeyPressSurfaces[SURFACE_KEY_PRESS_UP] == NULL) {
         printf( "Failed to load up image!\n" );
         success = false;
     }
 
     //Load down surface
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadSurface("images/turtley_screen_down.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] == NULL) {
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_DOWN] = loadSurface("images/turtley_screen_down.bmp");
+    if (gKeyPressSurfaces[SURFACE_KEY_PRESS_DOWN] == NULL) {
         printf( "Failed to load down image!\n" );
         success = false;
     }
 
     //Load left surface
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadSurface("images/turtley_screen_left.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] == NULL) {
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_LEFT] = loadSurface("images/turtley_screen_left.bmp");
+    if (gKeyPressSurfaces[SURFACE_KEY_PRESS_LEFT] == NULL) {
         printf( "Failed to load left image!\n" );
         success = false;
     }
 
     //Load right surface
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadSurface("images/turtley_screen_right.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] == NULL) {
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_RIGHT] = loadSurface("images/turtley_screen_right.bmp");
+    if (gKeyPressSurfaces[SURFACE_KEY_PRESS_RIGHT] == NULL) {
         printf( "Failed to load right image!\n" );
         success = false;
     }
@@ -110,7 +128,7 @@ bool loadMedia()
 
 void close() {
 	//Deallocate surfaces
-	for(int i = 0; i < KEY_PRESS_SURFACE_TOTAL; ++i) {
+	for(int i = 0; i < SURFACE_TOTAL; ++i) {
 		SDL_FreeSurface(gKeyPressSurfaces[i]);
 		gKeyPressSurfaces[i] = NULL;
 	}
@@ -133,11 +151,12 @@ int main(int argc, char* args[]) {
             bool quit = false;
             SDL_Event e;
 
-            //Apply the image
-            SDL_Delay(2000);
-
             //Set default current surface
-            gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ];
+            gCurrentSurface = gKeyPressSurfaces[SURFACE_INTRO];
+            SDL_BlitSurface(gCurrentSurface, NULL, gScreenSurface, NULL);
+            SDL_UpdateWindowSurface(gWindow);
+            SDL_Delay(2000);
+            gCurrentSurface = gKeyPressSurfaces[SURFACE_DEFAULT];
 
             //While application is running
             while(!quit) {
@@ -152,32 +171,37 @@ int main(int argc, char* args[]) {
                         //Select surfaces based on key press
                         switch(e.key.keysym.sym) {
                             case SDLK_UP: {
-                                gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_UP ];
+                                gCurrentSurface = gKeyPressSurfaces[SURFACE_KEY_PRESS_UP];
                                 break;
                             }
                             case SDLK_DOWN: {
-                                gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ];
+                                gCurrentSurface = gKeyPressSurfaces[SURFACE_KEY_PRESS_DOWN];
                                 break;
                             }
                             case SDLK_LEFT: {
-                                gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ];
+                                gCurrentSurface = gKeyPressSurfaces[SURFACE_KEY_PRESS_LEFT];
                                 break;
                             }
 
                             case SDLK_RIGHT: {
-                                gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ];
+                                gCurrentSurface = gKeyPressSurfaces[SURFACE_KEY_PRESS_RIGHT];
                                 break;
                             }
 
                             default: {
-                                gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ];
+                                gCurrentSurface = gKeyPressSurfaces[SURFACE_DEFAULT];
                                 break;
                             }
                         }
                     }
                 }
                 //Apply the current image
-                SDL_BlitSurface(gCurrentSurface, NULL, gScreenSurface, NULL );
+                SDL_Rect stretchRect;
+				stretchRect.x = 0;
+				stretchRect.y = 0;
+				stretchRect.w = SCREEN_WIDTH;
+				stretchRect.h = SCREEN_HEIGHT;
+				SDL_BlitScaled(gCurrentSurface, NULL, gScreenSurface, &stretchRect);
             
                 //Update the surface
                 SDL_UpdateWindowSurface(gWindow);
