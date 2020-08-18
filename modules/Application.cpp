@@ -12,7 +12,14 @@ bool Application::init() {
             printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
             success = false;
         } else {
-            gScreenSurface = SDL_GetWindowSurface(gWindow);
+            //Initialize PNG loading
+            int imgFlags = IMG_INIT_PNG;
+            if(!(IMG_Init( imgFlags ) & imgFlags)) {
+                printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
+                success = false;
+            } else {
+                gScreenSurface = SDL_GetWindowSurface(gWindow);
+            }
         }
     }
 
@@ -22,7 +29,7 @@ bool Application::init() {
 SDL_Surface* Application::loadSurface(string path) {
 	SDL_Surface* optimizedSurface = NULL;
 
-	SDL_Surface* loadedSurface = SDL_LoadBMP(path.c_str());
+	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
 	if (loadedSurface == NULL) {
 		printf( "Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
 	} else {
@@ -39,37 +46,37 @@ SDL_Surface* Application::loadSurface(string path) {
 bool Application::loadMedia() {
     bool success = true;
 
-    gKeyPressSurfaces[SURFACE_DEFAULT] = loadSurface("images/turtley_screen.bmp");
+    gKeyPressSurfaces[SURFACE_DEFAULT] = loadSurface("images/turtley_screen.png");
     if (gKeyPressSurfaces[SURFACE_DEFAULT] == NULL) {
         printf( "Failed to load default image!\n" );
         success = false;
     }
 
-    gKeyPressSurfaces[SURFACE_INTRO] = loadSurface("images/turtley_intro.bmp");
+    gKeyPressSurfaces[SURFACE_INTRO] = loadSurface("images/turtley_intro.png");
     if (gKeyPressSurfaces[SURFACE_INTRO] == NULL) {
         printf( "Failed to load default image!\n" );
         success = false;
     }
 
-    gKeyPressSurfaces[SURFACE_KEY_PRESS_UP] = loadSurface("images/turtley_screen_up.bmp");
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_UP] = loadSurface("images/turtley_screen_up.png");
     if (gKeyPressSurfaces[SURFACE_KEY_PRESS_UP] == NULL) {
         printf( "Failed to load up image!\n" );
         success = false;
     }
 
-    gKeyPressSurfaces[SURFACE_KEY_PRESS_DOWN] = loadSurface("images/turtley_screen_down.bmp");
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_DOWN] = loadSurface("images/turtley_screen_down.png");
     if (gKeyPressSurfaces[SURFACE_KEY_PRESS_DOWN] == NULL) {
         printf( "Failed to load down image!\n" );
         success = false;
     }
 
-    gKeyPressSurfaces[SURFACE_KEY_PRESS_LEFT] = loadSurface("images/turtley_screen_left.bmp");
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_LEFT] = loadSurface("images/turtley_screen_left.png");
     if (gKeyPressSurfaces[SURFACE_KEY_PRESS_LEFT] == NULL) {
         printf( "Failed to load left image!\n" );
         success = false;
     }
 
-    gKeyPressSurfaces[SURFACE_KEY_PRESS_RIGHT] = loadSurface("images/turtley_screen_right.bmp");
+    gKeyPressSurfaces[SURFACE_KEY_PRESS_RIGHT] = loadSurface("images/turtley_screen_right.png");
     if (gKeyPressSurfaces[SURFACE_KEY_PRESS_RIGHT] == NULL) {
         printf( "Failed to load right image!\n" );
         success = false;
