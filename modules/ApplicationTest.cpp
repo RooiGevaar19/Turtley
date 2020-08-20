@@ -1,13 +1,13 @@
-#include "Application.h"
+#include "ApplicationTest.h"
 
-bool Application::init() {
+bool ApplicationTest::init() {
     bool success = true;
 
     if (SDL_Init( SDL_INIT_VIDEO ) < 0) {
         printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
         success = false;
     } else {
-        gWindow = SDL_CreateWindow( "Turtley 0.0.2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+        gWindow = SDL_CreateWindow( "Turtley Test 1", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
         if(gWindow == NULL) {
             printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
             success = false;
@@ -22,11 +22,10 @@ bool Application::init() {
             }
         }
     }
-
     return success;
 }
 
-SDL_Surface* Application::loadSurface(string path) {
+SDL_Surface* ApplicationTest::loadSurface(string path) {
 	SDL_Surface* optimizedSurface = NULL;
 
 	SDL_Surface* loadedSurface = IMG_Load(path.c_str());
@@ -43,7 +42,7 @@ SDL_Surface* Application::loadSurface(string path) {
     return optimizedSurface;
 }
 
-bool Application::loadMedia() {
+bool ApplicationTest::loadMedia() {
     bool success = true;
 
     gKeyPressSurfaces[SURFACE_DEFAULT] = loadSurface("images/turtley_screen.png");
@@ -85,22 +84,17 @@ bool Application::loadMedia() {
     return success;
 }
 
-void Application::close() {
-	//Deallocate surfaces
+void ApplicationTest::close() {
 	for(int i = 0; i < SURFACE_TOTAL; ++i) {
 		SDL_FreeSurface(gKeyPressSurfaces[i]);
 		gKeyPressSurfaces[i] = NULL;
 	}
-
-	//Destroy window
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
-
-	//Quit SDL subsystems
 	SDL_Quit();
 }
 
-Application::Application() {
+ApplicationTest::ApplicationTest() {
     if (!init()) {
         printf("Failed to initialize!\n");
     } else if (!loadMedia()) {
@@ -108,11 +102,11 @@ Application::Application() {
     }
 }
 
-Application::~Application() {
+ApplicationTest::~ApplicationTest() {
     close();
 }
 
-void Application::run() {
+void ApplicationTest::run() {
     bool quit = false;
     SDL_Event e;
     //Set default current surface

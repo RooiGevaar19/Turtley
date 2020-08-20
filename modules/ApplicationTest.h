@@ -1,5 +1,5 @@
-#ifndef APPLICATION_H_
-#define APPLICATION_H_
+#ifndef APPLICATIONTEST_H_
+#define APPLICATIONTEST_H_
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -27,7 +27,7 @@ enum SurfacesIndexes
     SURFACE_TOTAL
 };
 
-class Application {
+class ApplicationTest {
     private:
         SDL_Window* gWindow = NULL;
         SDL_Surface* gScreenSurface = NULL;
@@ -38,8 +38,8 @@ class Application {
         SDL_Surface* loadSurface(string path);
         bool loadMedia();
     public:
-        Application();
-        ~Application();
+        ApplicationTest();
+        ~ApplicationTest();
         void run();
 };
 
